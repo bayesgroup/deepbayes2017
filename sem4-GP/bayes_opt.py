@@ -9,7 +9,7 @@ import GPy
 
 
 def lower_confidence_bound(mean_values, std_values, coefficient=2):
-    return -(mean_values.ravel() - coefficient * std_values.ravel())
+    return mean_values.ravel() - coefficient * std_values.ravel()
 
 
 def log_expected_improvement(mean_values, variance_values, opt_value):
@@ -34,7 +34,7 @@ def expected_improvement(mean_values, std_values, opt_values):
     return EI
 
 
-def get_new_point(model, lb, ub, data=None, multistart=10, random_state=None):
+def get_new_point(model, lb, ub, data=None, multistart=10, criterion='ei', k=1, random_state=None):
     if random_state is None:
         random_state = np.random.RandomState()
 
@@ -49,7 +49,12 @@ def get_new_point(model, lb, ub, data=None, multistart=10, random_state=None):
             x = x.reshape(1, -1)
         mean_values, variance = model.predict(x)
         std_values = np.sqrt(variance)
-        return -log_expected_improvement(mean_values, std_values, data[1].min())
+        if criterion == 'ei':
+            return -log_expected_improvement(mean_values, std_values, data[1].min())
+        elif criterion == 'lcb':
+            return lower_confidence_bound(mean_values, std_values, k)
+        else:
+            raise NotImplementedError('Criterion is not implemented!')
 
     criterion_value = objective(x_random)
 
@@ -64,11 +69,11 @@ def get_new_point(model, lb, ub, data=None, multistart=10, random_state=None):
     return best_result.x, best_result.fun
 
 
-def optimization_step(x_train, y_train, kernel, objective, lb=None, ub=None, plot=False):
+def optimization_step(x_train, y_train, kernel, objective, lb=None, ub=None, criterion='ei', k=1, plot=False):
     model = GPy.models.GPRegression(x_train, y_train, kernel)
     model.optimize_restarts(num_restarts=10, verbose=False)
 
-    x_new, criterion_value = get_new_point(model, data=(x_train, y_train), lb=lb, ub=ub)
+    x_new, criterion_value = get_new_point(model, data=(x_train, y_train), lb=lb, ub=ub, criterion=criterion, k=k)
     if plot:
         plot1d(x_train, y_train, model, objective, x_new, criterion_value)
         pyplot.show()
