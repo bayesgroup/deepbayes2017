@@ -214,7 +214,7 @@ def demo_2d(n_init, budget, kernel, save_path='./library/2d_demo.mp4'):
         # global model
 
         if iteration == 0:
-            return [*heatmaps, *scatters, *new_point_scatters, *convergence_plot]
+            return [heatmaps + scatters + new_point_scatters + convergence_plot]
 
         model = GPy.models.GPRegression(x_train, y_train, model.kern)
         model.optimize()
@@ -240,7 +240,7 @@ def demo_2d(n_init, budget, kernel, save_path='./library/2d_demo.mp4'):
 
         convergence_plot[0].set_data(range(n_init, y_train.shape[0] + 1), history)
 
-        return [*heatmaps, *scatters, *new_point_scatters, *convergence_plot]
+        return [heatmaps + scatters + new_point_scatters + convergence_plot]
 
 
 
