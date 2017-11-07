@@ -48,9 +48,8 @@ def get_new_point(model, lb, ub, data=None, multistart=10, criterion='ei', k=1, 
         if x.ndim == 1:
             x = x.reshape(1, -1)
         mean_values, variance = model.predict(x)
-        std_values = np.sqrt(variance)
         if criterion == 'ei':
-            return -log_expected_improvement(mean_values, std_values, data[1].min())
+            return -log_expected_improvement(mean_values, variance, data[1].min())
         elif criterion == 'lcb':
             return lower_confidence_bound(mean_values, std_values, k)
         else:
